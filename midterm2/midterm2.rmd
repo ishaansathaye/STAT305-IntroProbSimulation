@@ -1,0 +1,165 @@
+---
+title: "STAT 305 Midterm 2 Take-Home Problems"
+author: "Ishaan Sathaye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Setup global options
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# A Property of the Normal Distribution
+
+Recall the following theorem we discussed in **Lecture 7**, which is a fundamental property of the Normal distribution.
+
+> **Theorem:** If 𝑋∼𝑁(𝜇,𝜎), then the random variable 𝑍=𝑋−𝜇𝜎 has standard normal distribution.
+
+Proof of this theorem is beyond the scope of STAT 305. However, we may easily verify this theorem with a simulation study. In this problem, your task is to design a simulation study to verify this theorem following the steps below:
+
+-   **Simulate 10,000 random numbers from** 𝑁(𝜇=10,𝜎=5) **distribution and store them in a vector, say `x`.**
+
+    ```{r}
+    # set seed
+    set.seed(123)
+
+    x <- rnorm(10000, mean = 10, sd = 5)
+    head(x)
+    ```
+
+-   **Create a histogram of `x` using `hist()` function.**
+
+    ```{r}
+    hist(x, 
+         main = "Histogram of x ~ N(10, 5)", 
+         xlab = "x", 
+         col = "lightblue", 
+         border = "white") 
+    ```
+
+-   **Standardize `x`. In other words, for each entry in `x`, subtract the mean (**𝜇=10**) and divide by the standard deviation (**𝜎=5**). Save the standardized vector with a name, say `z`. Transforming a vector with R is very simple, see Section 5 in R Handout 1 for examples.**
+
+    ```{r}
+    z <- (x-10) / 5
+    head(z)
+    ```
+
+-   **Create a relative frequency histogram of `z`. You may do this easily by setting `probability=TRUE` inside the `hist()`function. Then add the standard normal probability density function on top of this relative frequency histogram with a different color. See R Handout 7 for examples.**
+
+    ```{r}
+    hist(z, probability = TRUE,
+         main = "Relative Frequency Histogram of Standardized x (z)", 
+         xlab = "z", 
+         col = "lightgreen", 
+         border = "white")
+
+    # adding normal curve to show that it does follow a standard normal dist
+    curve(dnorm(x),
+          add = TRUE,
+          col = "red",
+          lwd = 2)
+    ```
+
+-   **Does the relative frequency histogram strictly follow the standard normal distribution? If so, your simulation study serves as a verification of the above theorem.**
+
+    -   The relative frequency histogram does strictly follow the standard normal distribution because the z data aligns closely with the normal density curve. Visually this supports the theorem that when x is drawn from the normal distribution of mean 10 and standard deviation 5, the standardized variable z also follows a standard normal distribution.
+
+# Relationship between Poisson and Exponential Distributions
+
+Recall the result: If the number of occurrences per time interval follows a Poisson(λ) distribution, then the length of time between occurrences follows an Exponential(λ) distribution.
+
+-   **Let 𝑋 be the number of customers arriving at a bank branch in one hour, where 𝑋 ∼ Poisson(20).**
+
+-   **Let 𝑌 be the time (in minutes) between consecutive arrivals. Since there are on average 20 arrivals per hour, the per-minute rate is 20/60, and so 𝑌 ∼ Exponential(20/60).**
+
+-   **Simulate one hour of customer arrivals for this bank by generating inter-arrival times from an** Exponential(20/60) **distribution. Stop when the total time exceeds 60 minutes, and count the total number of customers arrived within this hour.**
+
+    ```{r}
+    # A safe upper bound for maximum number of customers within an hour
+    upper <- 1000  
+    y <- numeric(upper)  # Empty vector to store inter-arrival times
+    count <- 0  # Counter for number of arrivals
+
+    for (i in 1:upper) {
+      y[i] <- rexp(1, rate = 20/60)  # Generate an inter-arrival time (in minutes)
+      if (sum(y[1:i]) >= 60) {  # If total time exceeds or equals 60 minutes, exit the loop
+        break
+      } else {
+        count <- i  # Record the current number of arrivals
+      }
+    }
+    # 'count' now represents the number of customers that arrived within 60 minutes.
+    count
+    ```
+
+-   **Repeat above code 100,000 times in order to simulate 100,000 realizations of** 𝑋 **using the inter-arrival times only (not `rpois()`). This will require a *for loop* within a *for loop*, which is a common coding practice. Make sure to use a different index for the outer loop, say `j`, since we used the index `i` in code given above, which will serve as the inner loop. Also, use `set.seed(1)` so that we have the same simulation results. Save 100,000 realizations in a vector, say `x`.**
+
+    ```{r}
+    set.seed(1)
+
+    n_sim <- 100000  # Number of simulations
+    x_sim <- numeric(n_sim)
+
+    for (j in 1:n_sim) {
+      upper <- 1000  # Safe upper bound
+      y <- numeric(upper)
+      count <- 0
+      for (i in 1:upper) {
+        y[i] <- rexp(1, rate = 20/60)
+        if (sum(y[1:i]) >= 60) {
+          break
+        } else {
+          count <- i
+        }
+      }
+      x_sim[j] <- count
+    }
+
+    # Check the first few simulated values
+    head(x_sim)
+    ```
+
+-   **Create a relative frequency histogram of `x`, where bins are centered at integers from 0 to 50. You may see R Handout 5 for examples on imposing values for bins of histograms. Then add the** Poisson(20) **probability mass function on top of the relative frequency histogram as a lollipop graph with a different color. Note that we simulated one hour and stored in `x`, so `x` is comparable with hourly** Poisson(20) **arrivals.**
+
+    ```{r}
+    # Histogram with bins centered at integers from 0 to 50
+    hist(x_sim, 
+         breaks = seq(-0.5, 50.5, by = 1), 
+         probability = TRUE, 
+         xlim = c(0, 50),
+         main = "Relative Frequency Histogram of Hourly Customer Arrivals",
+         xlab = "Number of Customers", 
+         col = "red", 
+         border = "white")
+
+    # Compute the Poisson(20) PMF
+    x_vals <- 0:50
+    pois_pmf <- dpois(x_vals, lambda = 20)
+
+    # Overlay the PMF as a lollipop graph
+    segments(x_vals, 0, x_vals, pois_pmf, col = "blue", lwd = 2)
+    points(x_vals, pois_pmf, col = "blue", pch = 16)
+    ```
+
+-   **Calculate the mean and variance of simulated `x` and compare them with the theoretical mean and variance of a** Poisson(20) **distribution.**
+
+    ```{r}
+    # Sample mean and variance from the simulation
+    sim_mean <- mean(x_sim)
+    sim_variance <- var(x_sim)
+
+    # Theoretical mean and variance for Poisson(20)
+    theoretical_mean <- 20
+    theoretical_variance <- 20
+
+
+    cat("Simulated Mean:", sim_mean, "\n")
+    cat("Theoretical Mean:", theoretical_mean, "\n\n")
+    cat("Simulated Variance:", sim_variance, "\n")
+    cat("Theoretical Variance:", theoretical_variance, "\n")
+    ```
+
+-   **Does the relative frequency histogram strictly follow the** Poisson(20) **distribution? Are the mean and variance of simulated `x` close to the theoretical mean and variance of** Poisson(20) **distribution? If so, your simulation study serves as a verification of the relationship between Poisson and exponential distributions.**
+
+    -   The relative frequency histogram does strictly follow the Poisson(20) distribution since they align closely in the graphs. The sample mean and variance area also near 20 which is close to the Poisson(20) distribution.
