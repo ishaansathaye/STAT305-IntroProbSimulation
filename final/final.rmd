@@ -1,0 +1,284 @@
+---
+title: "STAT 305 Final Exam Take-Home Problems"
+author: "Ishaan Sathaye"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Setup global options
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# A Property of the Normal Distribution
+
+Recall the following theorem we discussed in **Lecture 10**, which is a fundamental property of the Normal distribution.
+
+> **Theorem (Sum of n independent normal variables):** If $X_1,X_2…,X_n$ are independent random variables, and each $X_i$ follows a normal distribution with mean $𝜇_𝑖$ and standard deviation $𝜎_𝑖$, then the sum $𝑍=𝑋_1+𝑋_2+⋯+𝑋_𝑛$ is also normally distributed.
+
+Proof of this theorem is beyond the scope of STAT 305. However, we may easily verify this theorem with a simulation study. In this problem, your task is to design a simulation study to verify this theorem following the steps below:
+
+-   **Simulate 100,000 realizations of random variable** $𝑋_1∼𝑁(𝜇=2,𝜎=1)$ **and store them in a vector, say `x1`.**
+
+    ```{r}
+    # Simulate X1
+    set.seed(123)
+
+    x1 <- rnorm(n = 100000, mean = 2, sd = 1)
+    head(x1)
+    ```
+
+-   **Simulate 100,000 realizations of random variable** $𝑋_2∼𝑁(𝜇=3,𝜎=2)$ **and store them in a vector, say `x2`.**
+
+    ```{r}
+    # Simulate X2
+    x2 <- rnorm(n = 100000, mean = 3, sd = 2)
+    head(x2)
+    ```
+
+-   **Simulate 100,000 realizations of random variable** $𝑋_3∼𝑁(𝜇=4,𝜎=3)$ **and store them in a vector, say `x3`.**
+
+    ```{r}
+    # Simulate X3
+    x3 <- rnorm(n = 100000, mean = 4, sd = 3)
+    head(x3)
+    ```
+
+-   **Let** $𝑍=𝑋_1+𝑋_2+𝑋_3$**. Then `x1+x2+x3` may be considered as 100,000 realizations of** $𝑍$**.**
+
+    ```{r}
+    # Define Z
+    z <- x1 + x2 + x3
+    head(z)
+    ```
+
+-   **Define `z=x1+x2+x3` and create a relative frequency histogram of `z`. You may do this easily by setting `probability=TRUE` inside the `hist()` function.**
+
+    ```{r}
+    # Histogram with probability = TRUE
+    hist(z, 
+         probability = TRUE,
+         breaks = 50,
+         main = "Histogram of Z", 
+         xlab = "Z")
+    ```
+
+-   **Using the above property of the normal distribution, find the distribution of** $𝑍$**. Add the p.d.f. of this distribution on top of the relative frequency histogram of `z`.**
+
+    ```{r}
+    hist(z, 
+         probability = TRUE,
+         breaks = 50,
+         main = "Histogram of Z", 
+         xlab = "Z")
+
+    # Parameters for Z
+    mu_Z <- 2 + 3 + 4
+    sigma_Z <- sqrt(1^2 + 2^2 + 3^2)
+
+    # X-values covering the range of z
+    x_vals <- seq(min(z), max(z), length.out = 1000)
+
+    # Add the theoretical PDF curve
+    lines(x_vals, 
+          dnorm(x_vals, mean = mu_Z, sd = sigma_Z), 
+          col = "blue", 
+          lwd = 2)
+    ```
+
+-   **Does the relative frequency histogram strictly follow the p.d.f.? If so, your simulation study serves as a verification of the above theorem.**
+
+    -   Yes, since the histogram matches the superimposed p.d.f. curve.
+
+# Central Limit Theorem
+
+Recall the Central Limit Theorem we discussed in **Lecture 10**, which is a fundamental theorem in probability and statistics.
+
+> **Theorem (Central Limit Theorem)**:\
+> Let $X_1, X_2, \ldots, X_n$ be a random sample of size $n$ from a distribution with mean $\mu$ and standard deviation $\sigma$. Let $$\bar{X} \;=\; \frac{1}{n}\sum_{i=1}^n X_i$$ denote the sample mean. Then, as $n \to \infty$, the distribution of $\bar{X}$ approaches a normal distribution with mean $\mu$ and standard deviation $\frac{\sigma}{\sqrt{n}}$.
+
+Proof of this theorem is beyond the scope of STAT 305. However, we may easily verify this theorem with a simulation study. In this problem, your task is to design a simulation study to verify this theorem following the steps below:
+
+-   **Consider an Exponential distribution with rate parameter 0.1.**
+
+    ```{r}
+    # Rate parameter for the Exponential distribution
+    lambda <- 0.1
+    ```
+
+-   **Calculate the mean and standard deviation of this distribution.**
+
+    ```{r}
+    # Mean and standard deviation for the Exponential distribution.
+    mean_exp <- 1 / lambda
+    sd_exp   <- 1 / lambda
+
+    cat("Exponential Distribution Mean:", mean_exp, "\n")
+    cat("Exponential Distribution SD:", sd_exp, "\n")
+    ```
+
+-   **Generate 100,000 random samples of size** $𝑛=9$ **from this distribution, calculate the mean of each sample, and create the relative frequency histogram of 100,000 sample means.**
+
+-   **Ignoring the fact that Central Limit Theorem works for large sample sizes, calculate the sampling distribution of** $\bar{𝑋}$ **using the theorem.**
+
+-   **Add the p.d.f. of the sampling distribution you found in the previous step on top of the relative frequency histogram of the sample means you generated. Since the sample size** $𝑛=9$ **is small, we expect a poor match between the relative frequency histogram and the p.d.f. of the sampling distribution. Do you see a poor match?**
+
+    ```{r}
+    set.seed(123)
+
+    # sample size
+    n <- 9             
+    num_samples <- 100000
+
+    # 100,000 random samples of size 9 and compute the sample means.
+    sample_means_n9 <- replicate(num_samples, mean(rexp(n, rate = lambda)))
+
+    # Relative frequency histogram of the sample means
+    hist(sample_means_n9, probability = TRUE, breaks = 50,
+         main = "Histogram of Sample Means (n = 9)",
+         xlab = "Sample Mean", col = "lightgray")
+
+
+    # Theoretical sampling distribution parameters for n = 9:
+    mu   <- mean_exp
+    se_n9 <- sd_exp / sqrt(n)
+
+
+    # Generate x-values spanning the range of the sample means
+    x_vals <- seq(min(sample_means_n9), max(sample_means_n9), length.out = 1000)
+
+    # Overlay the theoretical normal pdf on the histogram
+    lines(x_vals, dnorm(x_vals, mean = mu, sd = se_n9), col = "blue", lwd = 2)
+    ```
+
+    -   Yes, I see a poor match.
+
+-   **Now repeat everything for 100,000 samples of size** $𝑛=100$ **from the same Exponential distribution. Since the sample size is large, now we expect a good match between the relative frequency histogram and the p.d.f. of the sapling distribution given by the Central Limit Theorem. Do you see a good match?**
+
+    ```{r}
+    set.seed(123)
+
+    # sample size
+    n <- 100             
+
+    # 100,000 random samples of size 100 and compute the sample means.
+    sample_means_n100 <- replicate(num_samples, mean(rexp(n, rate = lambda)))
+
+    # Relative frequency histogram of the sample means
+    hist(sample_means_n100, probability = TRUE, breaks = 50,
+         main = "Histogram of Sample Means (n = 100)",
+         xlab = "Sample Mean", col = "lightgray")
+
+
+    # Theoretical sampling distribution parameters for n = 100:
+    se_n100 <- sd_exp / sqrt(n)
+
+
+    # Generate x-values spanning the range of the sample means
+    x_vals <- seq(min(sample_means_n100), max(sample_means_n100), length.out = 1000)
+
+    # Overlay the theoretical normal pdf on the histogram
+    lines(x_vals, dnorm(x_vals, mean = mu, sd = se_n100), col = "red", lwd = 2)
+    ```
+
+    -   Yes, I see a good match now.
+
+# **Empirical MSE Comparison for Two Estimators of Variance of a Normal Distribution**
+
+Consider a normal distribution with unknown mean $\mu$ and unknown variance $\sigma^2$. Our task is to estimate the parameter $\sigma^2$. Consider a random sample $X_1, X_2, \ldots, X_n$ from this distribution. In Lecture 11, we considered the following two estimators of $\sigma^2$:
+
+$$
+\hat{\sigma}^2_1 = \frac{1}{n} \sum_{i=1}^{n} \left( X_i - \bar{X} \right)^2,
+$$
+
+$$
+\hat{\sigma}^2_2 = \frac{1}{n-1} \sum_{i=1}^{n} \left( X_i - \bar{X} \right)^2.
+$$
+
+The (theoretical) Mean Squared Errors (MSE) for $\hat{\sigma}^2_1$ (Estimator 1, maximum likelihood estimator) and $\hat{\sigma}^2_2$ (Estimator 2, unbiased estimator) are hard to calculate. Therefore, in Lecture 11, we compared the two estimators in terms of Empirical Mean Squared Error using a graph. Figure: Empirical MSE comparison of Estimator 1 (maximum likelihood estimator) and Estimator 2 (unbiased estimator) for varying sample size n based on 10,000 simulations. Underlying distribution is N(50,10). This graph was created with base R.
+
+-   **In this problem your task is provide an R code to recreate this graph. You may either create the plot using base R functions (above plot was created with base R), or you may use R package [ggplot2]{.underline} (not required).**
+
+-   [**Note:**]{.underline} **When 𝑛=1, the denominator of Estimator 2 becomes 0, so we get an error. Therefore, on the x-axis of the graph, display 𝑛 from 2 to 50.**
+
+    ```{r}
+    set.seed(123)
+
+    num_sims <- 10000
+
+    true_var <- 10
+    true_sd  <- sqrt(10)
+    n_values <- 2:50
+
+    # Store empirical MSE for each estimator
+    mse1 <- numeric(length(n_values))  # for Estimator 1 (MLE)
+    mse2 <- numeric(length(n_values))  # for Estimator 2 (unbiased)
+    ```
+
+    ```{r}
+    for (j in seq_along(n_values)) {
+      n <- n_values[j]
+      
+      # Store each estimate
+      est1_vals <- numeric(num_sims)
+      est2_vals <- numeric(num_sims)
+      
+      # Repeat 10000 times
+      for (i in 1:num_sims) {
+        # Make a sample of size n from N(50, sqrt(10))
+        X <- rnorm(n, mean = 50, sd = true_sd)
+        
+        # Get sample mean
+        X_bar <- mean(X)
+        
+        # Sum of squared deviations
+        SS <- sum((X - X_bar)^2)
+        
+        # Compute the two estimators
+        est1_vals[i] <- SS / n        # Estimator 1 (MLE)
+        est2_vals[i] <- SS / (n - 1)  # Estimator 2 (unbiased)
+      }
+      
+      # Compute empirical MSE for each estimator
+      mse1[j] <- mean((est1_vals - true_var)^2)
+      mse2[j] <- mean((est2_vals - true_var)^2)
+    }
+
+    # Match scale of given graph
+    mse1_k <- mse1*100
+    mse2_k <- mse2*100
+
+    ```
+
+    ```{r}
+    # Plot the MSE of Estimator 1 (MLE)
+    plot(n_values, mse1_k,
+         type = "o",               
+         pch = 19, col = "blue",
+         lty = 3,                  
+         lwd = 2,                  
+         cex = 1.2,                
+         cex.lab = 1.3,           
+         cex.axis = 1.2,        
+         ylim = range(c(mse1_k, mse2_k)),
+         xlab = "Sample Size (n)",
+         ylab = "Mean Squared Error (MSE)",
+         main = "Comparing Empirical MSE of Estimators")
+
+    # Add the MSE of Estimator 2 (Unbiased)
+    lines(n_values, mse2_k,
+          type = "o",
+          pch = 17, col = "red",
+          lty = 3,     
+          lwd = 2,
+          cex = 1.2)
+
+    # Legend
+    legend("topright",
+           legend = c("Estimator 1", "Estimator 2"),
+           col = c("blue", "red"),
+           pch = c(19, 17),
+           lty = c(3, 3),
+           lwd = 2,
+           cex = 1.1)
+    ```
